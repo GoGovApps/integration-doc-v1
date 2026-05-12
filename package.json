@@ -1,0 +1,16 @@
+{
+  "name": "integration-doc-v1",
+  "version": "1.0.0",
+  "description": "Reference mock server demonstrating the HTTP contract a third-party vendor must expose to integrate with GOGov.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "fastify": "^5.8.5"
+  }
+}
