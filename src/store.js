@@ -41,7 +41,7 @@ function createRecord({ fields, externalReference }) {
     id,
     displayId: id,
     updatedAt: nowIso(),
-    url: `https://vendor.example.com/records/${id}`,
+    url: `https://partner.example.com/records/${id}`,
     fields: fields || {},
     externalReference: externalReference || undefined,
   };
@@ -64,14 +64,13 @@ function updateRecord(id, { fields, externalReference }) {
   return updated;
 }
 
-function listComments(recordId, { visibility } = {}) {
+function listComments(recordId) {
   const list = commentsByRecord.get(recordId);
   if (!list) return null;
-  if (visibility) return list.filter((c) => c.visibility === visibility);
   return list.slice();
 }
 
-function addComment(recordId, { message, sender, visibility }) {
+function addComment(recordId, { message, sender }) {
   if (!records.has(recordId)) return null;
   commentCounter += 1;
   const comment = {
@@ -79,7 +78,6 @@ function addComment(recordId, { message, sender, visibility }) {
     message,
     sender,
     dateSent: nowIso(),
-    visibility: visibility === "internal" ? "internal" : "public",
   };
   const list = commentsByRecord.get(recordId);
   list.push(comment);

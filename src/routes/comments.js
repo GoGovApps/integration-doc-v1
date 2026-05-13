@@ -3,11 +3,7 @@ const { sendError } = require("../errors");
 
 async function routes(fastify) {
   fastify.get("/:id/comments", async (req, reply) => {
-    const { visibility } = req.query;
-    if (visibility && visibility !== "public" && visibility !== "internal") {
-      return sendError(reply, 400, "bad_request", "visibility must be 'public' or 'internal'.");
-    }
-    const list = store.listComments(req.params.id, { visibility });
+    const list = store.listComments(req.params.id);
     if (list === null) {
       return sendError(reply, 404, "not_found", `No record with id '${req.params.id}'.`);
     }
@@ -18,14 +14,14 @@ async function routes(fastify) {
     if (!req.body || typeof req.body !== "object") {
       return sendError(reply, 400, "bad_request", "Request body must be a JSON object.");
     }
-    const { message, sender, visibility } = req.body;
+    const { message, sender } = req.body;
     if (!message || typeof message !== "string") {
       return sendError(reply, 400, "bad_request", "'message' is required and must be a string.");
     }
     if (!sender || typeof sender !== "object" || !sender.name) {
       return sendError(reply, 400, "bad_request", "'sender.name' is required.");
     }
-    const comment = store.addComment(req.params.id, { message, sender, visibility });
+    const comment = store.addComment(req.params.id, { message, sender });
     if (!comment) {
       return sendError(reply, 404, "not_found", `No record with id '${req.params.id}'.`);
     }

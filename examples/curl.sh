@@ -51,16 +51,15 @@ curl -sS "${AUTH[@]}" -H "Content-Type: application/json" \
   -X PUT "$BASE/records/$NEW_ID" \
   -d '{"fields": {"status": "in_progress"}}' | jq .
 
-say "List comments on REQ-001 (public only)"
-curl -sS "${AUTH[@]}" "$BASE/records/REQ-001/comments?visibility=public" | jq .
+say "List comments on REQ-001"
+curl -sS "${AUTH[@]}" "$BASE/records/REQ-001/comments" | jq .
 
 say "Add a comment"
 curl -sS "${AUTH[@]}" -H "Content-Type: application/json" \
   -X POST "$BASE/records/REQ-001/comments" \
   -d '{
     "message": "Inspector confirmed the report on site.",
-    "sender": {"name": "Sam Inspector", "email": "sam@vendor.example.com"},
-    "visibility": "public"
+    "sender": {"name": "Sam Inspector", "email": "sam@partner.example.com"}
   }' | jq .
 
 say "List attachments on REQ-001"
@@ -79,7 +78,7 @@ curl -sS "${AUTH[@]}" -H "Content-Type: application/json" \
 say "Fetch attachment download URL"
 curl -sS "${AUTH[@]}" "$BASE/records/REQ-001/attachments/ATT-1/download" | jq .
 
-say "Field metadata (what GOGov uses to build its field-mapping UI)"
+say "Field metadata (what GoGov uses to build its field-mapping UI)"
 curl -sS "${AUTH[@]}" "$BASE/fields" | jq .
 
 say "Auth failure example (no API key)"
