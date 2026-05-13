@@ -1,7 +1,7 @@
 {
   "name": "integration-doc-v1",
   "version": "1.0.0",
-  "description": "Reference mock server demonstrating the HTTP contract a third-party vendor must expose to integrate with GOGov.",
+  "description": "Reference mock server demonstrating the HTTP contract a partner must expose to integrate with GoGov DataSync.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

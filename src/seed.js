@@ -13,7 +13,7 @@ function seed() {
       id: "REQ-001",
       displayId: "REQ-001",
       updatedAt: isoAgo(2 * HOUR),
-      url: "https://vendor.example.com/records/REQ-001",
+      url: "https://partner.example.com/records/REQ-001",
       fields: {
         title: "Pothole on Main Street",
         status: "open",
@@ -26,23 +26,14 @@ function seed() {
       {
         id: "CMT-1",
         message: "Crew has been dispatched. ETA tomorrow morning.",
-        sender: { name: "Alex Rivera", email: "alex@vendor.example.com" },
+        sender: { name: "Alex Rivera", email: "alex@partner.example.com" },
         dateSent: isoAgo(90 * 60 * 1000),
-        visibility: "public",
       },
       {
         id: "CMT-2",
         message: "Resident contacted to confirm they will not block the area.",
-        sender: { name: "Alex Rivera", email: "alex@vendor.example.com" },
+        sender: { name: "Alex Rivera", email: "alex@partner.example.com" },
         dateSent: isoAgo(60 * 60 * 1000),
-        visibility: "public",
-      },
-      {
-        id: "CMT-3",
-        message: "Note for staff: budget code STREET-2026-Q2.",
-        sender: { name: "Casey Park", email: "casey@vendor.example.com" },
-        dateSent: isoAgo(30 * 60 * 1000),
-        visibility: "internal",
       },
     ],
     attachments: [
@@ -63,7 +54,7 @@ function seed() {
       id: "REQ-002",
       displayId: "REQ-002",
       updatedAt: isoAgo(1 * DAY),
-      url: "https://vendor.example.com/records/REQ-002",
+      url: "https://partner.example.com/records/REQ-002",
       fields: {
         title: "Streetlight outage on Oak Avenue",
         status: "in_progress",
@@ -74,11 +65,10 @@ function seed() {
     },
     comments: [
       {
-        id: "CMT-4",
+        id: "CMT-3",
         message: "Utility crew scheduled for Wednesday.",
-        sender: { name: "Jordan Lee", email: "jordan@vendor.example.com" },
+        sender: { name: "Jordan Lee", email: "jordan@partner.example.com" },
         dateSent: isoAgo(1 * DAY),
-        visibility: "public",
       },
     ],
     attachments: [],
@@ -89,7 +79,7 @@ function seed() {
       id: "REQ-003",
       displayId: "REQ-003",
       updatedAt: isoAgo(7 * DAY),
-      url: "https://vendor.example.com/records/REQ-003",
+      url: "https://partner.example.com/records/REQ-003",
       fields: {
         title: "Sidewalk repair request",
         status: "closed",
