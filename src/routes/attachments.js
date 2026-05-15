@@ -14,7 +14,7 @@ async function routes(fastify) {
     if (!req.body || typeof req.body !== "object") {
       return sendError(reply, 400, "bad_request", "Request body must be a JSON object.");
     }
-    const { name, description, fileType, size, downloadUrl } = req.body;
+    const { name, description, fileType, size, downloadUrl, visibility } = req.body;
     if (!name || typeof name !== "string") {
       return sendError(reply, 400, "bad_request", "'name' is required.");
     }
@@ -27,12 +27,16 @@ async function routes(fastify) {
     if (!downloadUrl || typeof downloadUrl !== "string") {
       return sendError(reply, 400, "bad_request", "'downloadUrl' is required.");
     }
+    if (visibility !== undefined && visibility !== "public" && visibility !== "internal") {
+      return sendError(reply, 400, "bad_request", "'visibility' must be 'public' or 'internal' when present.");
+    }
     const attachment = store.addAttachment(req.params.id, {
       name,
       description,
       fileType,
       size,
       downloadUrl,
+      visibility,
     });
     if (!attachment) {
       return sendError(reply, 404, "not_found", `No record with id '${req.params.id}'.`);
