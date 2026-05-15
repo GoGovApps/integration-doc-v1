@@ -70,13 +70,14 @@ function listComments(recordId) {
   return list.slice();
 }
 
-function addComment(recordId, { message, sender }) {
+function addComment(recordId, { message, sender, visibility }) {
   if (!records.has(recordId)) return null;
   commentCounter += 1;
   const comment = {
     id: `CMT-${commentCounter}`,
     message,
     sender,
+    visibility: visibility || "public",
     dateSent: nowIso(),
   };
   const list = commentsByRecord.get(recordId);
@@ -97,7 +98,7 @@ function getAttachment(recordId, attachmentId) {
   return list.find((a) => a.id === attachmentId) || null;
 }
 
-function addAttachment(recordId, { name, description, fileType, size, downloadUrl }) {
+function addAttachment(recordId, { name, description, fileType, size, downloadUrl, visibility }) {
   if (!records.has(recordId)) return null;
   attachmentCounter += 1;
   const attachment = {
@@ -106,6 +107,7 @@ function addAttachment(recordId, { name, description, fileType, size, downloadUr
     description: description || undefined,
     fileType,
     size,
+    visibility: visibility || "public",
     dateUploaded: nowIso(),
     downloadUrl,
   };

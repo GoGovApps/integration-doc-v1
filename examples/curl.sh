@@ -20,15 +20,15 @@ curl -sS "$BASE/health" | jq .
 say "List records (default pagination)"
 curl -sS "${AUTH[@]}" "$BASE/records" | jq .
 
-say "List records modified in the last day"
-SINCE=$(date -u -v-1d +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || date -u -d "1 day ago" +"%Y-%m-%dT%H:%M:%SZ")
-curl -sS "${AUTH[@]}" "$BASE/records?updatedSince=$SINCE" | jq .
+say "Batch fetch by ids (primary polling pattern: DataSync re-fetches known records)"
+curl -sS "${AUTH[@]}" "$BASE/records?ids=REQ-001,REQ-002" | jq .
 
 say "Fetch a single record"
 curl -sS "${AUTH[@]}" "$BASE/records/REQ-001" | jq .
 
-say "Batch fetch by ids"
-curl -sS "${AUTH[@]}" "$BASE/records?ids=REQ-001,REQ-002" | jq .
+say "Convenience: list records modified since a timestamp (not required by DataSync)"
+SINCE=$(date -u -v-1d +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || date -u -d "1 day ago" +"%Y-%m-%dT%H:%M:%SZ")
+curl -sS "${AUTH[@]}" "$BASE/records?updatedSince=$SINCE" | jq .
 
 say "Create a new record"
 NEW_ID=$(curl -sS "${AUTH[@]}" -H "Content-Type: application/json" \
@@ -51,15 +51,25 @@ curl -sS "${AUTH[@]}" -H "Content-Type: application/json" \
   -X PUT "$BASE/records/$NEW_ID" \
   -d '{"fields": {"status": "in_progress"}}' | jq .
 
-say "List comments on REQ-001"
+say "List comments on REQ-001 (note: response includes a 'visibility' field per item)"
 curl -sS "${AUTH[@]}" "$BASE/records/REQ-001/comments" | jq .
 
-say "Add a comment"
+say "Add a public comment"
 curl -sS "${AUTH[@]}" -H "Content-Type: application/json" \
   -X POST "$BASE/records/REQ-001/comments" \
   -d '{
     "message": "Inspector confirmed the report on site.",
-    "sender": {"name": "Sam Inspector", "email": "sam@partner.example.com"}
+    "sender": {"name": "Sam Inspector", "email": "sam@partner.example.com"},
+    "visibility": "public"
+  }' | jq .
+
+say "Add an internal (staff-only) comment"
+curl -sS "${AUTH[@]}" -H "Content-Type: application/json" \
+  -X POST "$BASE/records/REQ-001/comments" \
+  -d '{
+    "message": "Reminder: coordinate with traffic control before next visit.",
+    "sender": {"name": "Sam Inspector", "email": "sam@partner.example.com"},
+    "visibility": "internal"
   }' | jq .
 
 say "List attachments on REQ-001"
