@@ -155,7 +155,7 @@ Again: the routes and shapes below are *one viable shape* that this mock impleme
 | Get a record by ID                          | Required for Two-Way | We periodically re-fetch known records to detect vendor-side changes. |
 | Bulk get multiple records by IDs            | Recommended | Reduces polling overhead. We respect whatever batch limit you specify. |
 | Connection-test endpoint                    | Recommended | A simple endpoint we can hit to verify reachability + credentials. **Authenticate it if possible** — verifying auth in the same call surfaces credential problems faster. If your platform cannot authenticate the test endpoint, an unauthenticated one is acceptable. |
-| Field / schema discovery                    | Required for setup | Powers the field-mapping UI; setup cannot complete without it. See [Dynamic discovery](#dynamic-discovery). |
+| Field / schema discovery                    | Recommended | Powers the field-mapping UI; allows dynamic discovery of fields. Allows easy configuration of custom fields and pick lists. Can be broken up into multiple endpoints. See [Dynamic discovery](#dynamic-discovery). |
 | List / create comments                      | Required for comment sync | Implement if you want comments synced. |
 | List / create attachments                   | Required for attachment sync | Implement if you want attachments synced. |
 | Download attachment bytes                   | Required for attachment sync | Required only if you implement attachments. |
