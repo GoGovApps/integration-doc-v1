@@ -191,7 +191,7 @@ The `warnings` array is optional. Use it to surface non-fatal misconfigurations 
 
 ### List records — `GET /records`
 
-**Status:** Required
+**Status:** Recommended
 
 List records. The primary use case from the adapter is **batch re-fetch of known records by ID** — the polling mechanism. The `updatedSince` filter and pagination are convenience extras and are not used in normal polling.
 
