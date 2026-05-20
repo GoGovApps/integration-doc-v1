@@ -199,7 +199,7 @@ List records. The primary use case from the adapter is **batch re-fetch of known
 
 | Param | Type | Default | Description |
 |---|---|---|---|
-| `ids` | comma-separated string | none | Return only records whose IDs appear in this list. **This is how the adapter polls: it re-fetches the IDs it already knows about and compares `updatedAt` to detect changes.** Maximum batch size is your choice; tell us what it is. |
+| `ids` | comma-separated string | none | Return only records whose IDs appear in this list. **This is how the adapter polls: it re-fetches the IDs it already knows about and compares the mapped fields to the last known state to detect changes.** Maximum batch size is your choice; tell us what it is. |
 | `updatedSince` | ISO 8601 timestamp | none | (Optional convenience.) Return only records modified strictly after this time. Not required by the adapter — supply it only if you already publish a list-by-time pattern. |
 | `limit` | integer | 10 | Page size. Maximum 100. |
 | `offset` | integer | 0 | Number of records to skip. |
