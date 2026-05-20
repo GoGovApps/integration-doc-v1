@@ -153,7 +153,6 @@ Again: the routes and shapes below are *one viable shape* that this mock impleme
 | Create a record                             | Required | We send field values; you return a stable, immutable external ID. |
 | Update a record by ID                       | Required for ongoing updates | Without this, fields can only be set at creation. Rare but possible. |
 | Get a record by ID                          | Required for Two-Way | We periodically re-fetch known records to detect vendor-side changes. |
-| Reliable `updatedDate` on each record       | Required for Two-Way | Compared against our last-seen timestamp to detect changes. |
 | Bulk get multiple records by IDs            | Recommended | Reduces polling overhead. We respect whatever batch limit you specify. |
 | Connection-test endpoint                    | Recommended | A simple endpoint we can hit to verify reachability + credentials. **Authenticate it if possible** — verifying auth in the same call surfaces credential problems faster. If your platform cannot authenticate the test endpoint, an unauthenticated one is acceptable. |
 | Field / schema discovery                    | Required for setup | Powers the field-mapping UI; setup cannot complete without it. See [Dynamic discovery](#dynamic-discovery). |
