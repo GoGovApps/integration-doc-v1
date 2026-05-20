@@ -41,14 +41,14 @@ async function routes(fastify) {
     if (!req.body || typeof req.body !== "object") {
       return sendError(reply, 400, "bad_request", "Request body must be a JSON object.");
     }
-    const { fields, externalReference } = req.body;
+    const { fields } = req.body;
     if (!fields || typeof fields !== "object") {
       return sendError(reply, 400, "bad_request", "Body must include a 'fields' object.");
     }
     if (!fields.title || typeof fields.title !== "string") {
       return sendError(reply, 400, "bad_request", "fields.title is required.");
     }
-    const record = store.createRecord({ fields, externalReference });
+    const record = store.createRecord({ fields });
     return reply.code(201).send(record);
   });
 
@@ -58,7 +58,6 @@ async function routes(fastify) {
     }
     const updated = store.updateRecord(req.params.id, {
       fields: req.body.fields,
-      externalReference: req.body.externalReference,
     });
     if (!updated) {
       return sendError(reply, 404, "not_found", `No record with id '${req.params.id}'.`);

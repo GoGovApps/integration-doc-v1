@@ -38,7 +38,7 @@ DataSync is GoGov's integration framework. For each third-party system we integr
 
 **This is a request, not a specification.** We are not asking you to build an API that matches GoGov's shape. We are asking you to (a) tell us how your API works for the operations described below, and (b) tell us which capabilities you can support. Our adapter does the translation. The concrete examples in this document are *illustrative only, not prescriptive* — they show one possible shape, not a required shape.
 
-The customer configures the integration in our admin UI: sync mode (One-Way or Two-Way), per-field direction (Push, Pull, or One-Time Push), and which optional capabilities to enable. Your API does not need to know about these settings — they shape only what our adapter chooses to call.
+Our support staff configures the integration in our admin UI: sync mode (One-Way or Two-Way), per-field direction (Push, Pull, or One-Time Push), and which optional capabilities to enable. Your API does not need to know about these settings — they shape only what our adapter chooses to call.
 
 ---
 
@@ -100,8 +100,8 @@ The same pattern applies to comments and attachments — child records sync inde
 1. **GoGov calls you. You never have to call GoGov, except optionally to trigger an immediate pull (see below).** Your system does not need to know GoGov's URL or hold GoGov credentials for normal operation. You accept inbound HTTPS from our adapter, and that is enough.
 2. **Sync flows in two directions, by two different mechanisms.**
    - **GoGov to partner is near-real-time push, standard for every integration.** When a GoGov user edits a synced record, the adapter immediately calls your record-create or record-update endpoint. There is no schedule. There is no configuration switch to turn this off; it is how DataSync works.
-   - **Partner to GoGov is poll-driven.** The adapter re-fetches records it already knows about (typically by ID, in batches) on a configurable cadence — every 15 minutes is typical. Each re-fetch compares your record's `updatedDate` against what we last saw; if newer, we pull the changes into GoGov. There is no requirement for a "give me everything that changed since X" endpoint on your side — we already know which IDs to ask about.
-3. **Your record IDs are authoritative.** GoGov tracks its own ID for each record, and an `externalReference` block tells you GoGov's ID for cross-linking. Once a record exists in your system, your ID is the one GoGov uses to read and update it.
+   - **Partner to GoGov is poll-driven.** The adapter re-fetches records it already knows about (typically by ID, in batches) on a configurable cadence — every 15 minutes is typical. Each re-fetch takes the data from the record and maps it to fields in GoGov, then hashes the mapped fields and compares that to the last hash we have for that record. If the hash changed, we know something changed on your side and we update the GoGov record. If the hash is the same, we do nothing. This is how we detect changes on your side without you having to call us.
+3. **Your record IDs are authoritative.** GoGov tracks its own ID for each record. Once a record exists in your system, your ID is the one GoGov uses to read and update it.
 
 ### Triggering an immediate pull from your side (optional)
 
@@ -153,13 +153,15 @@ Again: the routes and shapes below are *one viable shape* that this mock impleme
 | Create a record                             | Required | We send field values; you return a stable, immutable external ID. |
 | Update a record by ID                       | Required for ongoing updates | Without this, fields can only be set at creation. Rare but possible. |
 | Get a record by ID                          | Required for Two-Way | We periodically re-fetch known records to detect vendor-side changes. |
-| Reliable `updatedDate` on each record       | Required for Two-Way | Compared against our last-seen timestamp to detect changes. |
 | Bulk get multiple records by IDs            | Recommended | Reduces polling overhead. We respect whatever batch limit you specify. |
 | Connection-test endpoint                    | Recommended | A simple endpoint we can hit to verify reachability + credentials. **Authenticate it if possible** — verifying auth in the same call surfaces credential problems faster. If your platform cannot authenticate the test endpoint, an unauthenticated one is acceptable. |
-| Field / schema discovery                    | Required for setup | Powers the field-mapping UI; setup cannot complete without it. See [Dynamic discovery](#dynamic-discovery). |
-| List / create comments                      | Required for comment sync | Implement if you want comments synced. |
-| List / create attachments                   | Required for attachment sync | Implement if you want attachments synced. |
-| Download attachment bytes                   | Required for attachment sync | Required only if you implement attachments. |
+| Field / schema discovery                    | Recommended | Powers the field-mapping UI; allows dynamic discovery of fields. Allows easy configuration of custom fields and pick lists. Can be broken up into multiple endpoints. See [Dynamic discovery](#dynamic-discovery). |
+| Create a comment                            | Required for comment sync | Required to push GoGov comments into your system. |
+| List comments                               | Required for two-way comment sync | Required to pull comments from your system back to GoGov. Without this, comments flow only from GoGov to your system. |
+| Register an attachment                      | Required for attachment sync | Required to push GoGov attachments into your system. |
+| List attachments                            | Required for two-way attachment sync | Required to pull attachments from your system back to GoGov. Without this, attachments flow only from GoGov to your system. |
+| Upload attachment | Required for copying the actual file bytes into your system. | If you store files, we can send them to you; if not, we just send metadata. We cannot send permanent links to files. |
+| Download attachment bytes                   | Required for  two-way attachment sync | Required only if you want attachments to be pulled from your system. |
 
 Comments and attachments are configured per-integration on the GoGov side. If you do not implement them, the administrator simply leaves those capabilities off; everything else continues to work.
 
@@ -189,7 +191,7 @@ The `warnings` array is optional. Use it to surface non-fatal misconfigurations 
 
 ### List records — `GET /records`
 
-**Status:** Required
+**Status:** Recommended
 
 List records. The primary use case from the adapter is **batch re-fetch of known records by ID** — the polling mechanism. The `updatedSince` filter and pagination are convenience extras and are not used in normal polling.
 
@@ -197,7 +199,7 @@ List records. The primary use case from the adapter is **batch re-fetch of known
 
 | Param | Type | Default | Description |
 |---|---|---|---|
-| `ids` | comma-separated string | none | Return only records whose IDs appear in this list. **This is how the adapter polls: it re-fetches the IDs it already knows about and compares `updatedAt` to detect changes.** Maximum batch size is your choice; tell us what it is. |
+| `ids` | comma-separated string | none | Return only records whose IDs appear in this list. **This is how the adapter polls: it re-fetches the IDs it already knows about and compares the mapped fields to the last known state to detect changes.** Maximum batch size is your choice; tell us what it is. |
 | `updatedSince` | ISO 8601 timestamp | none | (Optional convenience.) Return only records modified strictly after this time. Not required by the adapter — supply it only if you already publish a list-by-time pattern. |
 | `limit` | integer | 10 | Page size. Maximum 100. |
 | `offset` | integer | 0 | Number of records to skip. |
@@ -254,11 +256,6 @@ Create a new record. The adapter calls this when a resident submits a new reques
 
 ```json
 {
-  "externalReference": {
-    "gogovId": "9001",
-    "gogovDisplayId": "GG-9001",
-    "gogovUrl": "https://gogov.example.com/cases/9001"
-  },
   "fields": {
     "title": "Graffiti removal request",
     "status": "open",
@@ -268,13 +265,13 @@ Create a new record. The adapter calls this when a resident submits a new reques
 }
 ```
 
-The adapter includes our internal GoGov record ID in the create payload if you expose a field to receive it — some vendors offer a `trackingId` or `externalReference` field for exactly this purpose. It lets your operators click through to the originating record in GoGov.
+GoGov can provide its internal database ID or human-readable display ID by mapping either to any field in your system. If you expose a field to receive it (e.g. `gogovId`, `trackingId`, or any name you choose), tell us which field and we will populate it on every create and update. This lets your operators click through to the originating record in GoGov.
 
 **Response (201)** is the created record, including the ID your system assigned.
 
 **Duplicate handling.** Our framework does not currently catch *already exists* errors and convert them to updates. If your API rejects a duplicate create as a failure, the adapter treats that as a failure. We recommend one of:
 
-- **Upsert** — `POST /records` creates if new, updates if `externalReference.gogovId` already maps to an existing record.
+- **Upsert** — `POST /records` creates if new, updates if a GoGov ID already maps to an existing record.
 - **Clearly distinct create and update endpoints**, with documentation describing how the adapter should pick which to call.
 
 Either pattern is fine — tell us which applies.
@@ -297,9 +294,27 @@ curl -H "X-API-Key: demo-key-change-me" -H "Content-Type: application/json" \
 
 ---
 
+### Create a comment — `POST /records/:id/comments`
+
+**Status:** Required For Comment Sync
+
+Append a comment. The adapter sets `visibility` based on the GoGov-side comment it is replicating.
+
+```json
+{
+  "message": "Resident confirmed via phone.",
+  "sender": { "name": "Sam Inspector", "email": "sam@partner.example.com" },
+  "visibility": "public"
+}
+```
+
+**Response (201)** is the created comment, including its assigned `id` and `dateSent`.
+
+---
+
 ### List comments — `GET /records/:id/comments`
 
-**Status:** Optional
+**Status:** Required For Two-Way Comment Sync
 
 List comments on a record. Comments include progress messages posted by staff ("crew dispatched," "materials ordered," "work completed") and follow-up communications from the citizen.
 
@@ -340,21 +355,28 @@ curl -H "X-API-Key: demo-key-change-me" \
 
 ---
 
-### Create a comment — `POST /records/:id/comments`
+### Register an attachment — `POST /records/:id/attachments`
 
-**Status:** Optional
+**Status:** Required for attachment sync
 
-Append a comment. The adapter sets `visibility` based on the GoGov-side comment it is replicating.
+Register an attachment on a record. The adapter sends the file's metadata along with a `downloadUrl` from which you can pull the file bytes if you store them.
+
+**Upload encoding.** Tell us how you accept the file. Common patterns are `multipart/form-data` (one part for the file bytes, another for JSON metadata) and base64-encoded JSON.  We can also provide a presigned URL which you can use to upload the file directly. Either works for the adapter — we just need to know which you use. The mock accepts metadata only; it does not pull bytes.  If only metadata is possible, that is fine; we can still sync attachments as metadata-only items without file storage on your side.
+
+**File-size limits.** Tell us your maximum single-file size and accepted content types. We will respect whichever is lower between your limit and ours.
 
 ```json
 {
-  "message": "Resident confirmed via phone.",
-  "sender": { "name": "Sam Inspector", "email": "sam@partner.example.com" },
+  "name": "site-followup.jpg",
+  "description": "Follow-up photo from inspector.",
+  "fileType": "image/jpeg",
+  "size": 204800,
+  "downloadUrl": "https://gogov.example.com/attachments/abc123",
   "visibility": "public"
 }
 ```
 
-**Response (201)** is the created comment, including its assigned `id` and `dateSent`.
+**Response (201)** is the created attachment metadata.
 
 ---
 
@@ -396,36 +418,13 @@ List attachment metadata on a record. Attachments follow the **same public/inter
 
 ---
 
-### Register an attachment — `POST /records/:id/attachments`
-
-**Status:** Optional
-
-Register an attachment on a record. The adapter sends the file's metadata along with a `downloadUrl` from which you can pull the file bytes if you store them.
-
-**Upload encoding.** Tell us how you accept the file. Common patterns are `multipart/form-data` (one part for the file bytes, another for JSON metadata) and base64-encoded JSON. Either works for the adapter — we just need to know which you use. The mock accepts metadata only; it does not pull bytes.
-
-```json
-{
-  "name": "site-followup.jpg",
-  "description": "Follow-up photo from inspector.",
-  "fileType": "image/jpeg",
-  "size": 204800,
-  "downloadUrl": "https://gogov.example.com/attachments/abc123",
-  "visibility": "public"
-}
-```
-
-**Response (201)** is the created attachment metadata.
-
----
-
 ### Download an attachment — `GET /records/:id/attachments/:attachmentId/download`
 
-**Status:** Optional (required only if you implement attachments)
+**Status:** Required for two-way attachment sync
 
 Return the URL from which the adapter can fetch the file bytes. The mock uses a two-step pattern (metadata GET, then download GET) so file storage can be separate from the record API and download URLs can be short-lived signed URLs if needed. The adapter is happy with either pattern: a download URL embedded in the list response, or a separate `/download` endpoint.
 
-**File-size limits.** Tell us your maximum single-file size and accepted content types. We will respect whichever is lower between your limit and ours.
+We cannot accept only metadata without file storage on your side if you want attachments to flow from your system into GoGov. The adapter needs to fetch the bytes from somewhere in order to send them to GoGov.
 
 **Response (200)**
 
@@ -446,20 +445,14 @@ Return the URL from which the adapter can fetch the file bytes. The mock uses a 
   "updatedAt": "2026-05-12T12:30:00Z",
   "url": "https://partner.example.com/records/REQ-001",
   "fields": { "...": "..." },
-  "externalReference": {
-    "gogovId": "9001",
-    "gogovDisplayId": "GG-9001",
-    "gogovUrl": "https://gogov.example.com/cases/9001"
-  }
 }
 ```
 
 - **`id`** is your system's identifier for the record. String; format is your choice. Must be immutable for the life of the record — renumbering or rotating IDs will orphan records on our side. Used in all subsequent URL paths.
 - **`displayId`** is what a human sees in your UI (often the same as `id`, sometimes different, e.g. `id: "9f7a-..."`, `displayId: "REQ-2026-0042"`).
-- **`updatedAt`** is the last-modified timestamp, ISO 8601 with `Z`. Critical for polling; the adapter uses this to decide whether to re-sync the record. Must change whenever any tracked field, comment, or attachment changes.
+- **`updatedAt`** is the last-modified timestamp, ISO 8601 with `Z`. 
 - **`url`** is an optional deep link back into your UI for this record. Surfaces as a "View in partner system" link inside GoGov.
-- **`fields`** is a partner-defined object whose keys correspond to the field names returned by your schema-discovery endpoint.
-- **`externalReference`** is present only if the record originated in GoGov or has been linked to a GoGov record. You receive this on `POST` and `PUT`; you should persist it and echo it back on subsequent `GET`s.
+- **`fields`** is a partner-defined object whose keys correspond to the field names returned by your schema-discovery endpoint. If you expose a field to store a GoGov ID or display ID, GoGov will populate it on every write — tell us the field name and which ID type to use.
 
 ### Comment
 
@@ -520,6 +513,8 @@ Return the URL from which the adapter can fetch the file bytes. The mock uses a 
 | `Pull` | Your system only | Your system sends the value to GoGov on every re-fetch. GoGov never writes it back. | `resolvedAt` driven by your workflow |
 
 **How to choose.** If you are not sure: start with `TwoWay` for editable text and enum fields, `Pull` for timestamps your system controls, and `PushOnce` for fields you want to record once and never overwrite.
+
+**Note** Sync Directions is not required in the API; it is metadata you provide to GoGov to guide field-mapping configuration. If you do not provide it, the developer building the adapter will need documentation to know which fields are which, so they can limit the adapter's behavior accordingly.
 
 ### Error
 
@@ -750,7 +745,7 @@ curl -s -H "X-API-Key: demo-key-change-me" "http://localhost:3000/records/$ID"
 
 ### Connection-test recipe
 
-This is the exact sequence the adapter runs on the customer's "Test Connection" click:
+Every adapter has different requirements for what the connection test must verify, but a common recipe is:
 
 ```bash
 # 1. Health (no auth)
@@ -765,11 +760,10 @@ curl -fsS -H "X-API-Key: demo-key-change-me" http://localhost:3000/fields > /dev
 echo "Connection test passed"
 ```
 
-All three must succeed. If any fail, the administrator cannot finish configuring the integration.
 
 ### Checklist
 
-- [ ] All timestamps are ISO 8601 with a `Z` suffix (UTC). No local time, no offsets like `+00:00`.
+- [ ] All timestamps are ISO 8601 with a `Z` suffix (UTC). If for whatever reason your dates are not in this format, document the deviation.
 - [ ] Every record has an `updatedAt` field, and it changes whenever the record is mutated (including when comments or attachments are added).
 - [ ] `GET /records?ids=…` returns only the requested IDs, and unknown IDs are silently omitted rather than erroring the whole call.
 - [ ] Empty collections return `{ "items": [], "total": 0 }`, not `null` and not a `404`.
@@ -787,6 +781,14 @@ All three must succeed. If any fail, the administrator cannot finish configuring
 - **External ID stability.** Every external record (main record, comment, attachment, contact) must have an immutable identifier that does not change for the life of the record.
 - **Sandbox / test environment.** Strongly recommended. If unavailable, a test record or test category in production works.
 - **UI access to your system for our adapter team.** Without it, adapter builds drag from days to months because we cannot verify whether records actually landed correctly in your system. This is one of the highest-impact items in this document.
+
+### Additional configuration details
+
+If your API has specific requirements that are not listed here (such as a different URL for authorization, specific environment configurations, or additional authentication fields), the developer creating the adapter can create additional configuration settings for our support team to fill out. Please provide these details in documentation for your API so we can implement them in the adapter.
+
+### Portal Url
+
+If your system has a portal URL, you can provide it to us and it will be a configurable field in the UI. If the portal is provided our customers can click on the URL in the GoGov UI to go directly to the portal. This is an alternative to providing a URL on each record.  If your portal URL allows for deep linking to specific records, you can also provide a URL template (e.g. `https://partner.example.com/records/{id}`) and we will populate it with the record ID for each record's URL field.
 
 ---
 
