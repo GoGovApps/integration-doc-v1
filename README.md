@@ -772,7 +772,7 @@ echo "Connection test passed"
 
 ### Checklist
 
-- [ ] All timestamps are ISO 8601 with a `Z` suffix (UTC). No local time, no offsets like `+00:00`.
+- [ ] All timestamps are ISO 8601 with a `Z` suffix (UTC). If for whatever reason your dates are not in this format, document the deviation.
 - [ ] Every record has an `updatedAt` field, and it changes whenever the record is mutated (including when comments or attachments are added).
 - [ ] `GET /records?ids=…` returns only the requested IDs, and unknown IDs are silently omitted rather than erroring the whole call.
 - [ ] Empty collections return `{ "items": [], "total": 0 }`, not `null` and not a `404`.
