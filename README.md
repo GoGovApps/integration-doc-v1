@@ -156,9 +156,11 @@ Again: the routes and shapes below are *one viable shape* that this mock impleme
 | Bulk get multiple records by IDs            | Recommended | Reduces polling overhead. We respect whatever batch limit you specify. |
 | Connection-test endpoint                    | Recommended | A simple endpoint we can hit to verify reachability + credentials. **Authenticate it if possible** — verifying auth in the same call surfaces credential problems faster. If your platform cannot authenticate the test endpoint, an unauthenticated one is acceptable. |
 | Field / schema discovery                    | Recommended | Powers the field-mapping UI; allows dynamic discovery of fields. Allows easy configuration of custom fields and pick lists. Can be broken up into multiple endpoints. See [Dynamic discovery](#dynamic-discovery). |
-| List / create comments                      | Required for comment sync | Implement if you want comments synced. |
-| List / create attachments                   | Required for attachment sync | Implement if you want attachments synced. |
-| Upload attachment | Required for copying the actual file bytes into your system. | If you store files, we can send them to you; if not, we just send metadata. We cannot send permanent links to files. (We can send presigned URLs for your system to upload) |
+| Create a comment                            | Required for comment sync | Required to push GoGov comments into your system. |
+| List comments                               | Required for two-way comment sync | Required to pull comments from your system back to GoGov. Without this, comments flow only from GoGov to your system. |
+| Register an attachment                      | Required for attachment sync | Required to push GoGov attachments into your system. |
+| List attachments                            | Required for two-way attachment sync | Required to pull attachments from your system back to GoGov. Without this, attachments flow only from GoGov to your system. |
+| Upload attachment | Required for copying the actual file bytes into your system. | If you store files, we can send them to you; if not, we just send metadata. We cannot send permanent links to files. |
 | Download attachment bytes                   | Required for  two-way attachment sync | Required only if you want attachments to be pulled from your system. |
 
 Comments and attachments are configured per-integration on the GoGov side. If you do not implement them, the administrator simply leaves those capabilities off; everything else continues to work.
