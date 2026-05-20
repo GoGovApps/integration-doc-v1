@@ -786,6 +786,10 @@ echo "Connection test passed"
 
 If your API has specific requirements that are not listed here (such as a different URL for authorization, specific environment configurations, or additional authentication fields), the developer creating the adapter can create additional configuration settings for our support team to fill out. Please provide these details in documentation for your API so we can implement them in the adapter.
 
+### Portal Url
+
+If your system has a portal URL, you can provide it to us and it will be a configurable field in the UI. If the portal is provided our customers can click on the URL in the GoGov UI to go directly to the portal. This is an alternative to providing a URL on each record.  If your portal URL allows for deep linking to specific records, you can also provide a URL template (e.g. `https://partner.example.com/records/{id}`) and we will populate it with the record ID for each record's URL field.
+
 ---
 
 ## Optional / future extensions
