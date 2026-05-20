@@ -301,7 +301,7 @@ curl -H "X-API-Key: demo-key-change-me" -H "Content-Type: application/json" \
 
 ### List comments — `GET /records/:id/comments`
 
-**Status:** Optional
+**Status:** Required For Two-Way Comment Sync
 
 List comments on a record. Comments include progress messages posted by staff ("crew dispatched," "materials ordered," "work completed") and follow-up communications from the citizen.
 
@@ -344,7 +344,7 @@ curl -H "X-API-Key: demo-key-change-me" \
 
 ### Create a comment — `POST /records/:id/comments`
 
-**Status:** Optional
+**Status:** Required For Comment Sync
 
 Append a comment. The adapter sets `visibility` based on the GoGov-side comment it is replicating.
 
@@ -400,11 +400,13 @@ List attachment metadata on a record. Attachments follow the **same public/inter
 
 ### Register an attachment — `POST /records/:id/attachments`
 
-**Status:** Optional
+**Status:** Required for attachment sync
 
 Register an attachment on a record. The adapter sends the file's metadata along with a `downloadUrl` from which you can pull the file bytes if you store them.
 
-**Upload encoding.** Tell us how you accept the file. Common patterns are `multipart/form-data` (one part for the file bytes, another for JSON metadata) and base64-encoded JSON. Either works for the adapter — we just need to know which you use. The mock accepts metadata only; it does not pull bytes.
+**Upload encoding.** Tell us how you accept the file. Common patterns are `multipart/form-data` (one part for the file bytes, another for JSON metadata) and base64-encoded JSON.  We can also provide a presigned URL which you can use to upload the file directly. Either works for the adapter — we just need to know which you use. The mock accepts metadata only; it does not pull bytes.  If only metadata is possible, that is fine; we can still sync attachments as metadata-only items without file storage on your side.
+
+**File-size limits.** Tell us your maximum single-file size and accepted content types. We will respect whichever is lower between your limit and ours.
 
 ```json
 {
@@ -423,11 +425,11 @@ Register an attachment on a record. The adapter sends the file's metadata along 
 
 ### Download an attachment — `GET /records/:id/attachments/:attachmentId/download`
 
-**Status:** Optional (required only if you implement attachments)
+**Status:** Required for two-way attachment sync
 
 Return the URL from which the adapter can fetch the file bytes. The mock uses a two-step pattern (metadata GET, then download GET) so file storage can be separate from the record API and download URLs can be short-lived signed URLs if needed. The adapter is happy with either pattern: a download URL embedded in the list response, or a separate `/download` endpoint.
 
-**File-size limits.** Tell us your maximum single-file size and accepted content types. We will respect whichever is lower between your limit and ours.
+We cannot accept only metadata without file storage on your side if you want attachments to flow from your system into GoGov. The adapter needs to fetch the bytes from somewhere in order to send them to GoGov.
 
 **Response (200)**
 
