@@ -34,7 +34,7 @@ function getRecord(id) {
   return records.get(id) || null;
 }
 
-function createRecord({ fields, externalReference }) {
+function createRecord({ fields }) {
   recordCounter += 1;
   const id = `REQ-${String(100 + recordCounter).padStart(3, "0")}`;
   const record = {
@@ -43,7 +43,6 @@ function createRecord({ fields, externalReference }) {
     updatedAt: nowIso(),
     url: `https://partner.example.com/records/${id}`,
     fields: fields || {},
-    externalReference: externalReference || undefined,
   };
   records.set(id, record);
   commentsByRecord.set(id, []);
@@ -51,13 +50,12 @@ function createRecord({ fields, externalReference }) {
   return record;
 }
 
-function updateRecord(id, { fields, externalReference }) {
+function updateRecord(id, { fields }) {
   const existing = records.get(id);
   if (!existing) return null;
   const updated = {
     ...existing,
     fields: { ...existing.fields, ...(fields || {}) },
-    externalReference: externalReference || existing.externalReference,
     updatedAt: nowIso(),
   };
   records.set(id, updated);

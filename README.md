@@ -256,11 +256,6 @@ Create a new record. The adapter calls this when a resident submits a new reques
 
 ```json
 {
-  "externalReference": {
-    "gogovId": "9001",
-    "gogovDisplayId": "GG-9001",
-    "gogovUrl": "https://gogov.example.com/cases/9001"
-  },
   "fields": {
     "title": "Graffiti removal request",
     "status": "open",
@@ -270,13 +265,13 @@ Create a new record. The adapter calls this when a resident submits a new reques
 }
 ```
 
-The adapter includes our internal GoGov record ID in the create payload if you expose a field to receive it — some vendors offer a `trackingId` or `externalReference` field for exactly this purpose. It lets your operators click through to the originating record in GoGov.
+GoGov can provide its internal database ID or human-readable display ID by mapping either to any field in your system. If you expose a field to receive it (e.g. `gogovId`, `trackingId`, or any name you choose), tell us which field and we will populate it on every create and update. This lets your operators click through to the originating record in GoGov.
 
 **Response (201)** is the created record, including the ID your system assigned.
 
 **Duplicate handling.** Our framework does not currently catch *already exists* errors and convert them to updates. If your API rejects a duplicate create as a failure, the adapter treats that as a failure. We recommend one of:
 
-- **Upsert** — `POST /records` creates if new, updates if `externalReference.gogovId` already maps to an existing record.
+- **Upsert** — `POST /records` creates if new, updates if a GoGov ID already maps to an existing record.
 - **Clearly distinct create and update endpoints**, with documentation describing how the adapter should pick which to call.
 
 Either pattern is fine — tell us which applies.
@@ -450,11 +445,6 @@ We cannot accept only metadata without file storage on your side if you want att
   "updatedAt": "2026-05-12T12:30:00Z",
   "url": "https://partner.example.com/records/REQ-001",
   "fields": { "...": "..." },
-  "externalReference": {
-    "gogovId": "9001",
-    "gogovDisplayId": "GG-9001",
-    "gogovUrl": "https://gogov.example.com/cases/9001"
-  }
 }
 ```
 
@@ -462,8 +452,7 @@ We cannot accept only metadata without file storage on your side if you want att
 - **`displayId`** is what a human sees in your UI (often the same as `id`, sometimes different, e.g. `id: "9f7a-..."`, `displayId: "REQ-2026-0042"`).
 - **`updatedAt`** is the last-modified timestamp, ISO 8601 with `Z`. 
 - **`url`** is an optional deep link back into your UI for this record. Surfaces as a "View in partner system" link inside GoGov.
-- **`fields`** is a partner-defined object whose keys correspond to the field names returned by your schema-discovery endpoint.
-- **`externalReference`** is present only if the record originated in GoGov or has been linked to a GoGov record. You receive this on `POST` and `PUT`; you should persist it and echo it back on subsequent `GET`s.
+- **`fields`** is a partner-defined object whose keys correspond to the field names returned by your schema-discovery endpoint. If you expose a field to store a GoGov ID or display ID, GoGov will populate it on every write — tell us the field name and which ID type to use.
 
 ### Comment
 
