@@ -782,6 +782,10 @@ echo "Connection test passed"
 - **Sandbox / test environment.** Strongly recommended. If unavailable, a test record or test category in production works.
 - **UI access to your system for our adapter team.** Without it, adapter builds drag from days to months because we cannot verify whether records actually landed correctly in your system. This is one of the highest-impact items in this document.
 
+### Additional configuration details
+
+If your API has specific requirements that are not listed here (such as a different URL for authorization, specific environment configurations, or additional authentication fields), the developer creating the adapter can create additional configuration settings for our support team to fill out. Please provide these details in documentation for your API so we can implement them in the adapter.
+
 ---
 
 ## Optional / future extensions
