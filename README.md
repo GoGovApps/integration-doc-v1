@@ -460,7 +460,7 @@ We cannot accept only metadata without file storage on your side if you want att
 
 - **`id`** is your system's identifier for the record. String; format is your choice. Must be immutable for the life of the record — renumbering or rotating IDs will orphan records on our side. Used in all subsequent URL paths.
 - **`displayId`** is what a human sees in your UI (often the same as `id`, sometimes different, e.g. `id: "9f7a-..."`, `displayId: "REQ-2026-0042"`).
-- **`updatedAt`** is the last-modified timestamp, ISO 8601 with `Z`. Critical for polling; the adapter uses this to decide whether to re-sync the record. Must change whenever any tracked field, comment, or attachment changes.
+- **`updatedAt`** is the last-modified timestamp, ISO 8601 with `Z`. 
 - **`url`** is an optional deep link back into your UI for this record. Surfaces as a "View in partner system" link inside GoGov.
 - **`fields`** is a partner-defined object whose keys correspond to the field names returned by your schema-discovery endpoint.
 - **`externalReference`** is present only if the record originated in GoGov or has been linked to a GoGov record. You receive this on `POST` and `PUT`; you should persist it and echo it back on subsequent `GET`s.
