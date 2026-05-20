@@ -754,7 +754,7 @@ curl -s -H "X-API-Key: demo-key-change-me" "http://localhost:3000/records/$ID"
 
 ### Connection-test recipe
 
-This is the exact sequence the adapter runs on the customer's "Test Connection" click:
+Every adapter has different requirements for what the connection test must verify, but a common recipe is:
 
 ```bash
 # 1. Health (no auth)
@@ -769,7 +769,6 @@ curl -fsS -H "X-API-Key: demo-key-change-me" http://localhost:3000/fields > /dev
 echo "Connection test passed"
 ```
 
-All three must succeed. If any fail, the administrator cannot finish configuring the integration.
 
 ### Checklist
 
