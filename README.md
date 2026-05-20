@@ -101,7 +101,7 @@ The same pattern applies to comments and attachments — child records sync inde
 2. **Sync flows in two directions, by two different mechanisms.**
    - **GoGov to partner is near-real-time push, standard for every integration.** When a GoGov user edits a synced record, the adapter immediately calls your record-create or record-update endpoint. There is no schedule. There is no configuration switch to turn this off; it is how DataSync works.
    - **Partner to GoGov is poll-driven.** The adapter re-fetches records it already knows about (typically by ID, in batches) on a configurable cadence — every 15 minutes is typical. Each re-fetch takes the data from the record and maps it to fields in GoGov, then hashes the record and compares that to the last hash we have for that record. If the hash changed, we know something changed on your side and we update the GoGov record. If the hash is the same, we do nothing. This is how we detect changes on your side without you having to call us.
-3. **Your record IDs are authoritative.** GoGov tracks its own ID for each record, and an `externalReference` block tells you GoGov's ID for cross-linking. Once a record exists in your system, your ID is the one GoGov uses to read and update it.
+3. **Your record IDs are authoritative.** GoGov tracks its own ID for each record. Once a record exists in your system, your ID is the one GoGov uses to read and update it.
 
 ### Triggering an immediate pull from your side (optional)
 
