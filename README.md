@@ -299,6 +299,24 @@ curl -H "X-API-Key: demo-key-change-me" -H "Content-Type: application/json" \
 
 ---
 
+### Create a comment — `POST /records/:id/comments`
+
+**Status:** Required For Comment Sync
+
+Append a comment. The adapter sets `visibility` based on the GoGov-side comment it is replicating.
+
+```json
+{
+  "message": "Resident confirmed via phone.",
+  "sender": { "name": "Sam Inspector", "email": "sam@partner.example.com" },
+  "visibility": "public"
+}
+```
+
+**Response (201)** is the created comment, including its assigned `id` and `dateSent`.
+
+---
+
 ### List comments — `GET /records/:id/comments`
 
 **Status:** Required For Two-Way Comment Sync
@@ -339,24 +357,6 @@ curl -H "X-API-Key: demo-key-change-me" \
   "total": 2
 }
 ```
-
----
-
-### Create a comment — `POST /records/:id/comments`
-
-**Status:** Required For Comment Sync
-
-Append a comment. The adapter sets `visibility` based on the GoGov-side comment it is replicating.
-
-```json
-{
-  "message": "Resident confirmed via phone.",
-  "sender": { "name": "Sam Inspector", "email": "sam@partner.example.com" },
-  "visibility": "public"
-}
-```
-
-**Response (201)** is the created comment, including its assigned `id` and `dateSent`.
 
 ---
 
