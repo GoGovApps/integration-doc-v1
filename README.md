@@ -38,7 +38,7 @@ DataSync is GoGov's integration framework. For each third-party system we integr
 
 **This is a request, not a specification.** We are not asking you to build an API that matches GoGov's shape. We are asking you to (a) tell us how your API works for the operations described below, and (b) tell us which capabilities you can support. Our adapter does the translation. The concrete examples in this document are *illustrative only, not prescriptive* — they show one possible shape, not a required shape.
 
-The customer configures the integration in our admin UI: sync mode (One-Way or Two-Way), per-field direction (Push, Pull, or One-Time Push), and which optional capabilities to enable. Your API does not need to know about these settings — they shape only what our adapter chooses to call.
+Our support staff configures the integration in our admin UI: sync mode (One-Way or Two-Way), per-field direction (Push, Pull, or One-Time Push), and which optional capabilities to enable. Your API does not need to know about these settings — they shape only what our adapter chooses to call.
 
 ---
 
