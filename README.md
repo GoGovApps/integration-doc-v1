@@ -360,6 +360,31 @@ curl -H "X-API-Key: demo-key-change-me" \
 
 ---
 
+### Register an attachment — `POST /records/:id/attachments`
+
+**Status:** Required for attachment sync
+
+Register an attachment on a record. The adapter sends the file's metadata along with a `downloadUrl` from which you can pull the file bytes if you store them.
+
+**Upload encoding.** Tell us how you accept the file. Common patterns are `multipart/form-data` (one part for the file bytes, another for JSON metadata) and base64-encoded JSON.  We can also provide a presigned URL which you can use to upload the file directly. Either works for the adapter — we just need to know which you use. The mock accepts metadata only; it does not pull bytes.  If only metadata is possible, that is fine; we can still sync attachments as metadata-only items without file storage on your side.
+
+**File-size limits.** Tell us your maximum single-file size and accepted content types. We will respect whichever is lower between your limit and ours.
+
+```json
+{
+  "name": "site-followup.jpg",
+  "description": "Follow-up photo from inspector.",
+  "fileType": "image/jpeg",
+  "size": 204800,
+  "downloadUrl": "https://gogov.example.com/attachments/abc123",
+  "visibility": "public"
+}
+```
+
+**Response (201)** is the created attachment metadata.
+
+---
+
 ### List attachments — `GET /records/:id/attachments`
 
 **Status:** Optional
@@ -395,31 +420,6 @@ List attachment metadata on a record. Attachments follow the **same public/inter
   "total": 2
 }
 ```
-
----
-
-### Register an attachment — `POST /records/:id/attachments`
-
-**Status:** Required for attachment sync
-
-Register an attachment on a record. The adapter sends the file's metadata along with a `downloadUrl` from which you can pull the file bytes if you store them.
-
-**Upload encoding.** Tell us how you accept the file. Common patterns are `multipart/form-data` (one part for the file bytes, another for JSON metadata) and base64-encoded JSON.  We can also provide a presigned URL which you can use to upload the file directly. Either works for the adapter — we just need to know which you use. The mock accepts metadata only; it does not pull bytes.  If only metadata is possible, that is fine; we can still sync attachments as metadata-only items without file storage on your side.
-
-**File-size limits.** Tell us your maximum single-file size and accepted content types. We will respect whichever is lower between your limit and ours.
-
-```json
-{
-  "name": "site-followup.jpg",
-  "description": "Follow-up photo from inspector.",
-  "fileType": "image/jpeg",
-  "size": 204800,
-  "downloadUrl": "https://gogov.example.com/attachments/abc123",
-  "visibility": "public"
-}
-```
-
-**Response (201)** is the created attachment metadata.
 
 ---
 
