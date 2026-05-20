@@ -514,6 +514,8 @@ We cannot accept only metadata without file storage on your side if you want att
 
 **How to choose.** If you are not sure: start with `TwoWay` for editable text and enum fields, `Pull` for timestamps your system controls, and `PushOnce` for fields you want to record once and never overwrite.
 
+**Note** Sync Directions is not required in the API; it is metadata you provide to GoGov to guide field-mapping configuration. If you do not provide it, the developer building the adapter will need documentation to know which fields are which, so they can limit the adapter's behavior accordingly.
+
 ### Error
 
 Every error response, at any status, uses this shape:
