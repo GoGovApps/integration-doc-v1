@@ -142,6 +142,8 @@ DataSync does **not** delete comments or attachments on your side. If a GoGov us
 
 Every endpoint in this reference returns JSON with `Content-Type: application/json`. List endpoints return `{ items: [...], total: N }`. Timestamps are ISO 8601 with a `Z` suffix, for example `2026-05-12T14:30:00Z`.
 
+**Record type parameter.** If the integration is configured with a record type from [`GET /types`](#record-types--get-types), the adapter appends `?type=<id>` to every call except `/health` and `/types` — records, child records, downloads, and `/fields`. Scope your response to that type, or ignore the parameter if you have only one type. The mock accepts the parameter when omitted and returns `400` for an unknown type id.
+
 Again: the routes and shapes below are *one viable shape* that this mock implements. The adapter will translate to whatever shape your API exposes — we just need a clear description.
 
 ### Which operations does our adapter perform?
@@ -655,13 +657,19 @@ We do not update matched contacts, so a matched contact's existing name / email 
 
 For the customer's setup UI to display dropdowns the customer can map against, the adapter may need to discover record types, custom fields, and picklist values from your system at configuration time. Each block below is independent — implement only what applies.
 
-The mock illustrates the **custom fields** block via `GET /fields`. Record types and picklist discovery have no mock endpoint; describe them in your API documentation if they apply.
+The mock illustrates **record types** via `GET /types` and **custom fields** via `GET /fields`. Picklist discovery has no mock endpoint; describe it in your API documentation if it applies.
 
-### Record types
+### Record types — `GET /types`
 
 If your system supports defining multiple record types (each with its own fields and dropdowns), the customer needs to choose which type GoGov requests sync into.
 
-**Required if your system supports multiple record types** — expose an endpoint returning the list of record types, each with a stable ID and display name. Skip if your system has a single, fixed record type.
+**Required if your system supports multiple record types.** Authenticated. Each type needs a stable `id` and a display `name`. The `id` the customer picks is then sent as `?type=<id>` on every other call (see [Endpoint reference](#endpoint-reference)). If you have a single, fixed record type, return `404` or an empty `items` list. The adapter's connection test also calls this endpoint to verify the API key.
+
+**Mock response (200)**
+
+```json
+{ "items": [{ "id": "service-request", "name": "Service Request" }], "total": 1 }
+```
 
 ### Custom fields — `GET /fields` (mock)
 
@@ -718,6 +726,10 @@ Before declaring your API ready for the adapter to connect, walk through this ch
 curl -s http://localhost:3000/health
 # Expect: 200, body { success: true, ... }
 
+# Record types (also how the adapter verifies the API key)
+curl -s -H "X-API-Key: demo-key-change-me" http://localhost:3000/types
+# Expect: 200, body { items: [{ id, name }] } (or 404 if you have a single type)
+
 # Single record fetch
 curl -s -H "X-API-Key: demo-key-change-me" http://localhost:3000/records/REQ-001
 # Expect: 200, body with id, displayId, updatedAt, fields
@@ -751,8 +763,8 @@ Every adapter has different requirements for what the connection test must verif
 # 1. Health (no auth)
 curl -fsS http://localhost:3000/health > /dev/null
 
-# 2. Auth check (any authenticated endpoint with a known-good record)
-curl -fsS -H "X-API-Key: demo-key-change-me" http://localhost:3000/records?limit=1 > /dev/null
+# 2. Auth check (the adapter uses /types for this)
+curl -fsS -H "X-API-Key: demo-key-change-me" http://localhost:3000/types > /dev/null
 
 # 3. Field metadata (must return at least one field)
 curl -fsS -H "X-API-Key: demo-key-change-me" http://localhost:3000/fields > /dev/null

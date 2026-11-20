@@ -18,18 +18,21 @@ const fastify = require("fastify")({ logger: true });
 
 const rateLimit = require("./src/rateLimit.js");
 const auth = require("./src/auth.js");
+const typeParam = require("./src/typeParam.js");
 const seed = require("./src/seed.js");
 
 seed();
 
 fastify.addHook("preHandler", rateLimit);
 fastify.addHook("preHandler", auth);
+fastify.addHook("preHandler", typeParam);
 
 fastify.register(require("./src/routes/health.js"));
 fastify.register(require("./src/routes/records.js"), { prefix: "/records" });
 fastify.register(require("./src/routes/comments.js"), { prefix: "/records" });
 fastify.register(require("./src/routes/attachments.js"), { prefix: "/records" });
 fastify.register(require("./src/routes/fields.js"), { prefix: "/fields" });
+fastify.register(require("./src/routes/types.js"), { prefix: "/types" });
 
 const port = parseInt(process.env.PORT || "3000", 10);
 

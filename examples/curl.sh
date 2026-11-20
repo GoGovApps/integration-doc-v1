@@ -17,6 +17,9 @@ say() { printf "\n\033[1m# %s\033[0m\n" "$*"; }
 say "Connection test (no auth required)"
 curl -sS "$BASE/health" | jq .
 
+say "Record types (the chosen id is sent back as ?type= on later calls)"
+curl -sS "${AUTH[@]}" "$BASE/types" | jq .
+
 say "List records (default pagination)"
 curl -sS "${AUTH[@]}" "$BASE/records" | jq .
 
